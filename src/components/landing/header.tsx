@@ -10,7 +10,7 @@ export default function LandingHeader() {
 
   const navLinks = [
     { href: "#comment-ca-marche", label: "Comment ça marche" },
-    { href: "#pourquoi", label: "Pourquoi BemPay" },
+    { href: "#demo", label: "Démo" },
     { href: "#faq", label: "FAQ" },
   ];
 
@@ -38,7 +38,7 @@ export default function LandingHeader() {
 
         <div className="hidden md:flex items-center gap-2">
           <Button variant="ghost" asChild>
-            <Link href="/login">Connexion</Link>
+            <Link href="/login">Espace Admin</Link>
           </Button>
           <Button asChild>
             <Link href="#liste-attente">Rejoindre la liste d’attente</Link>
@@ -71,7 +71,7 @@ export default function LandingHeader() {
             ))}
              <div className="flex flex-col gap-3 w-full pt-6 mt-2 border-t">
                 <Button variant="outline" asChild>
-                    <Link href="/login" onClick={closeMenu}>Connexion</Link>
+                    <Link href="/login" onClick={closeMenu}>Espace Admin</Link>
                 </Button>
                 <Button asChild>
                     <Link href="#liste-attente" onClick={closeMenu}>Rejoindre la liste d’attente</Link>

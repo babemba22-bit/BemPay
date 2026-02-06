@@ -53,7 +53,7 @@ export default function Header() {
         </Link>
        </nav>
         <Button asChild>
-            <Link href="/login">Connexion</Link>
+            <Link href="/login">Espace Admin</Link>
         </Button>
      </header>
     )
@@ -63,7 +63,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6 z-50">
-      <nav className="flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 w-full">
+      <nav className="w-full flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 text-lg font-semibold md:text-base"
@@ -71,6 +71,7 @@ export default function Header() {
           <CircleDollarSign className="h-6 w-6 text-primary" />
           <span className="font-bold text-xl">BemPay</span>
         </Link>
+        <span className="hidden md:block text-sm font-medium text-muted-foreground">/ Espace Admin</span>
       </nav>
       <div className="flex items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
         <DropdownMenu>
@@ -87,16 +88,16 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
+              <span>Profil</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>Se déconnecter</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
