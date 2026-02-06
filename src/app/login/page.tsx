@@ -10,19 +10,40 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login } from "@/lib/local-data";
+import { getSession, login } from "@/lib/local-data";
+import { useToast } from "@/hooks/use-toast";
 import { CircleDollarSign } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+const ADMIN_PASSCODE = "1234";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [passcode, setPasscode] = useState("");
+
+  useEffect(() => {
+    // If user is already logged in, redirect to dashboard
+    if (getSession().isAuthed) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    login();
-    router.push("/dashboard");
+    if (passcode === ADMIN_PASSCODE) {
+      login();
+      router.push("/dashboard");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Code incorrect",
+        description: "Le code administrateur est incorrect.",
+      });
+      setPasscode("");
+    }
   };
 
   return (
@@ -34,37 +55,34 @@ export default function LoginPage() {
         </Link>
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Connexion</CardTitle>
+            <CardTitle className="text-2xl">Accès Admin</CardTitle>
             <CardDescription>
-              Accédez à votre tableau de bord.
+              Entrez le code pour accéder au tableau de bord.
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Adresse email</Label>
+                <Label htmlFor="passcode">Code admin</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="nom@exemple.com"
+                  id="passcode"
+                  type="password"
                   required
-                  defaultValue="demo@bempay.com"
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  placeholder="••••"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input id="password" type="password" required defaultValue="password" />
-              </div>
               <Button type="submit" className="w-full !mt-6">
-                Se connecter (Démo)
+                Se connecter
               </Button>
             </CardContent>
           </form>
         </Card>
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Pas encore de compte ?{" "}
-          <Link href="/#liste-attente" className="underline hover:text-primary font-medium">
-            Rejoignez la liste d'attente
+          Retour à la{" "}
+          <Link href="/" className="underline hover:text-primary font-medium">
+            page d'accueil
           </Link>
           .
         </p>
