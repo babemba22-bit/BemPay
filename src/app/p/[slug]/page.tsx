@@ -3,23 +3,20 @@
 import { CheckoutCard } from '@/components/checkout/checkout-card';
 import { getLinkBySlug } from '@/lib/local-data';
 import type { PaymentLink } from '@/lib/types';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type CheckoutPageProps = {
-  params: {
-    slug: string;
-  };
-};
-
-export default function CheckoutPage({ params }: CheckoutPageProps) {
-  const { slug } = params;
+export default function CheckoutPage() {
+  const params = useParams();
+  const slug = params.slug as string;
   const [link, setLink] = useState<PaymentLink | null | undefined>(undefined);
 
   useEffect(() => {
-    const foundLink = getLinkBySlug(slug);
-    setLink(foundLink);
+    if (slug) {
+      const foundLink = getLinkBySlug(slug);
+      setLink(foundLink);
+    }
   }, [slug]);
 
   if (link === undefined) {
