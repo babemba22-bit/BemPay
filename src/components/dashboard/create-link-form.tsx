@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const formSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters"),
-  amount_xof: z.coerce.number().positive("Amount must be a positive number"),
+  title: z.string().min(3, "Le titre doit comporter au moins 3 caractères."),
+  amount_xof: z.coerce.number().positive("Le montant doit être un nombre positif."),
   description: z.string().optional(),
 });
 
@@ -51,8 +52,8 @@ export function CreateLinkForm({ onLinkCreated }: CreateLinkFormProps) {
     form.reset();
     onLinkCreated(); // Notify parent to refresh
     toast({
-        title: "Link created!",
-        description: "Your new payment link is ready.",
+        title: "Lien créé !",
+        description: "Votre nouveau lien de paiement est prêt.",
     });
   };
 
@@ -60,42 +61,42 @@ export function CreateLinkForm({ onLinkCreated }: CreateLinkFormProps) {
     if (!generatedLink) return;
     navigator.clipboard.writeText(generatedLink);
     toast({
-      title: "Copied!",
-      description: "Payment link copied to clipboard.",
+      title: "Copié !",
+      description: "Lien de paiement copié dans le presse-papiers.",
     });
   };
 
   return (
     <Card className="w-full shadow-lg">
       <CardHeader>
-        <CardTitle>Create a Payment Link</CardTitle>
+        <CardTitle>Créer un lien de paiement</CardTitle>
         <CardDescription>
-          Generate a new link to receive payments.
+          Générez un nouveau lien pour recevoir des paiements.
         </CardDescription>
       </CardHeader>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Titre</Label>
             <Input id="title" placeholder="e.g., T-shirt 'Mali Dev'" {...form.register("title")} />
             {form.formState.errors.title && <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (XOF)</Label>
+            <Label htmlFor="amount">Montant (XOF)</Label>
             <Input id="amount" type="number" placeholder="e.g., 15000" {...form.register("amount_xof")} />
             {form.formState.errors.amount_xof && <p className="text-sm text-destructive">{form.formState.errors.amount_xof.message}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="description">Description (Optionnel)</Label>
             <Textarea
               id="description"
-              placeholder="Describe what you're selling."
+              placeholder="Décrivez ce que vous vendez."
               {...form.register("description")}
             />
           </div>
           {generatedLink && (
             <div className="space-y-2 rounded-lg border bg-secondary/50 p-3">
-              <Label>Your new link is ready!</Label>
+              <Label>Votre nouveau lien est prêt !</Label>
               <div className="flex items-center gap-2">
                 <Input value={generatedLink} readOnly className="bg-background"/>
                 <Button type="button" size="icon" variant="ghost" onClick={handleCopy}>

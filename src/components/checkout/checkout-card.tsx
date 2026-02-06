@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,12 @@ type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 type CheckoutCardProps = {
   link: PaymentLink;
+};
+
+const statusTranslations: Record<PaymentLink['status'], string> = {
+  ACTIVE: 'ACTIF',
+  PAID: 'PAYÉ',
+  DISABLED: 'DÉSACTIVÉ',
 };
 
 export function CheckoutCard({ link }: CheckoutCardProps) {
@@ -70,6 +77,8 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
       router.push(`/payment/failure?reason=simulation_failed`);
     }
   };
+  
+  const translatedStatus = statusTranslations[link.status] || link.status;
 
   return (
     <Card className="w-full shadow-xl">
@@ -118,7 +127,7 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={link.status !== 'ACTIVE' || form.formState.isSubmitting}>
-            {link.status === 'ACTIVE' ? `Payer ${formatCurrency(link.amount_xof)}` : `Link is ${link.status}`}
+            {link.status === 'ACTIVE' ? `Payer ${formatCurrency(link.amount_xof)}` : `Lien ${translatedStatus}`}
           </Button>
         </CardFooter>
       </form>

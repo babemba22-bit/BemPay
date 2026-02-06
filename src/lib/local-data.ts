@@ -59,7 +59,7 @@ function seedData() {
         title: 'T-shirt "Mali Dev"',
         description: "High-quality cotton t-shirt for developers in Mali.",
         amount_xof: 15000,
-        slug: "t-shirt-mali-dev",
+        slug: "T-SHIRT",
         status: "ACTIVE",
         created_at: new Date(
           Date.now() - 1 * 24 * 60 * 60 * 1000
@@ -72,7 +72,7 @@ function seedData() {
         title: "Consulting Session (1hr)",
         description: "A one-hour consulting session on web development.",
         amount_xof: 75000,
-        slug: "consulting-1hr",
+        slug: "CONSULT",
         status: "PAID",
         created_at: new Date(
           Date.now() - 5 * 24 * 60 * 60 * 1000
@@ -115,14 +115,15 @@ export function listLinks(): PaymentLink[] {
 
 export function getLinkBySlug(slug: string): PaymentLink | undefined {
   const links = listLinks();
-  return links.find((link) => link.slug === slug);
+  return links.find((link) => link.slug.toLowerCase() === slug.toLowerCase());
 }
 
 export function createLink(data: Omit<PaymentLink, "link_id" | "creator_id" | "created_at" | "disabled_at" | "status">): PaymentLink {
   const creator = getCreator();
   if (!creator) throw new Error("No creator found. Cannot create link.");
   
-  const slug = data.title.toLowerCase().replace(/\s+/g, '-').slice(0, 50) + '-' + Math.random().toString(36).substring(2, 8);
+  // For a real app, a backend would guarantee uniqueness. For this demo, random is sufficient.
+  const slug = Math.random().toString(36).substring(2, 8).toUpperCase();
 
   const newLink: PaymentLink = {
     ...data,

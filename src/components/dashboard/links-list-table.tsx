@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,12 @@ type LinksListTableProps = {
   onLinkUpdated: () => void;
 };
 
+const statusTranslations: Record<PaymentLink['status'], string> = {
+  ACTIVE: 'ACTIF',
+  PAID: 'PAYÉ',
+  DISABLED: 'DÉSACTIVÉ',
+};
+
 export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
   const { toast } = useToast();
 
@@ -43,8 +50,8 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
     const link = `${window.location.origin}/p/${slug}`;
     navigator.clipboard.writeText(link);
     toast({
-      title: "Copied!",
-      description: "Payment link copied to clipboard.",
+      title: "Copié !",
+      description: "Lien de paiement copié dans le presse-papiers.",
     });
   };
 
@@ -52,27 +59,27 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
     updateLinkStatus(link_id, "DISABLED");
     onLinkUpdated();
     toast({
-      title: "Link Disabled",
-      description: "The payment link has been disabled.",
+      title: "Lien désactivé",
+      description: "Le lien de paiement a été désactivé.",
     });
   };
 
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Your Payment Links</CardTitle>
+        <CardTitle>Vos liens de paiement</CardTitle>
         <CardDescription>
-          Here's a list of all your payment links.
+          Voici la liste de tous vos liens de paiement.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead className="hidden sm:table-cell">Status</TableHead>
-              <TableHead className="hidden sm:table-cell text-right">Amount</TableHead>
-              <TableHead className="hidden md:table-cell">Created</TableHead>
+              <TableHead>Titre</TableHead>
+              <TableHead className="hidden sm:table-cell">Statut</TableHead>
+              <TableHead className="hidden sm:table-cell text-right">Montant</TableHead>
+              <TableHead className="hidden md:table-cell">Créé le</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -81,7 +88,7 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
           <TableBody>
             {links.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center h-24">No links created yet.</TableCell>
+                <TableCell colSpan={5} className="text-center h-24">Aucun lien créé pour le moment.</TableCell>
               </TableRow>
             )}
             {links.map((link) => (
@@ -98,12 +105,12 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
                       'outline'
                     }
                     className={
-                      link.status === 'PAID' ? 'bg-green-500/80 dark:bg-green-500/50 hover:bg-green-500/90' 
-                      : link.status === 'DISABLED' ? 'bg-red-500/80 dark:bg-red-500/50 hover:bg-red-500/90' 
+                      link.status === 'PAID' ? 'bg-green-500/80 dark:bg-green-500/50 hover:bg-green-500/90 text-white' 
+                      : link.status === 'DISABLED' ? 'bg-red-500/80 dark:bg-red-500/50 hover:bg-red-500/90 text-white' 
                       : ''
                     }
                   >
-                    {link.status}
+                    {statusTranslations[link.status]}
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-right">
@@ -123,18 +130,18 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link href={`/p/${link.slug}`} target="_blank">
-                          <ExternalLink className="mr-2 h-4 w-4" /> Open
+                          <ExternalLink className="mr-2 h-4 w-4" /> Ouvrir
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleCopy(link.slug)}>
-                        <Copy className="mr-2 h-4 w-4" /> Copy link
+                        <Copy className="mr-2 h-4 w-4" /> Copier le lien
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDisable(link.link_id)}
                         disabled={link.status === "DISABLED"}
                         className="text-red-600 focus:text-red-600"
                       >
-                        <PowerOff className="mr-2 h-4 w-4" /> Disable
+                        <PowerOff className="mr-2 h-4 w-4" /> Désactiver
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

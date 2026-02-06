@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +31,12 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const statusTranslations: Record<PaymentLink['status'], string> = {
+  ACTIVE: 'ACTIF',
+  PAID: 'PAYÉ',
+  DISABLED: 'DÉSACTIVÉ',
+};
 
 export default function DemoSection() {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -154,7 +161,7 @@ export default function DemoSection() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <Badge variant={link.status === 'PAID' ? 'default' : 'secondary'} className={link.status === 'PAID' ? 'bg-green-500/80 hover:bg-green-500/90' : ''}>
-                                            {link.status}
+                                            {statusTranslations[link.status]}
                                         </Badge>
                                         {link.status === 'ACTIVE' && (
                                             <Button size="sm" variant="outline" onClick={() => handleSimulatePayment(link.link_id)}>
