@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { createPayment, markPaymentSuccess } from "@/lib/local-data";
 import type { PaymentLink } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,15 +46,28 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
   });
 
   const onSubmit = (values: CheckoutFormValues) => {
-    console.log("Initiating payment with:", values);
-    // Simulate a payment process
-    // In a real app, you would redirect to the payment provider's page
-    // or use their SDK.
+    console.log("Form values:", values);
+    
+    // 1. Create a payment record
+    const payment = createPayment({
+      link_id: link.link_id,
+      payer_name: values.name,
+      payer_email: values.email,
+    });
+    console.log("Initiating payment:", payment);
+
+    // 2. Simulate a payment process
     const isSuccess = Math.random() > 0.2; // 80% success rate
+
     if (isSuccess) {
-      router.push("/payment/success");
+      // 3. If successful, mark it as success and update link status
+      markPaymentSuccess(payment.payment_id, link.link_id);
+      console.log("Payment successful, redirecting...");
+      router.push(`/payment/success?paymentId=${payment.payment_id}`);
     } else {
-      router.push("/payment/failure");
+      // 4. If failed, just redirect
+       console.log("Payment failed, redirecting...");
+      router.push(`/payment/failure?reason=simulation_failed`);
     }
   };
 
@@ -82,7 +96,7 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
             </div>
           </div>
           <Separator />
-          <RadioGroup defaultValue="cinetpay" {...form.register("paymentMethod")}>
+          <RadioGroup defaultValue="cinetpay" onValueChange={(value) => form.setValue('paymentMethod', value as "cinetpay" | "paydunya")}>
             <Label>Payment Method</Label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2 rounded-md border p-3 hover:border-primary has-[[data-state=checked]]:border-primary">

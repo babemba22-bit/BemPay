@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,13 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, PlusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useDemoLinks } from "@/hooks/use-demo-links";
-import type { DemoLink } from "@/lib/types";
+import type { PaymentLink } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { createLink, listLinks, updateLinkStatus } from "@/lib/local-data";
 
 const formSchema = z.object({
   title: z.string().min(3, "Le titre doit faire au moins 3 caractères"),
-  amount: z.coerce.number().positive("Le montant doit être un nombre positif"),
+  amount_xof: z.coerce.number().positive("Le montant doit être un nombre positif"),
   description: z.string().optional(),
 });
 
@@ -34,32 +34,36 @@ type FormValues = z.infer<typeof formSchema>;
 export default function DemoSection() {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const { toast } = useToast();
-  const { links, addLink, simulatePayment } = useDemoLinks();
+  const [links, setLinks] = useState<PaymentLink[]>([]);
+
+  const refreshLinks = useCallback(() => {
+    // Show only the 3 most recent links for the demo
+    setLinks(listLinks().slice(0, 3));
+  }, []);
+
+  useEffect(() => {
+    refreshLinks();
+    
+    const handleStorageChange = () => refreshLinks();
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [refreshLinks]);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      amount: undefined,
+      amount_xof: undefined,
       description: "",
     },
   });
 
   const onSubmit = (values: FormValues) => {
-    const slug = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const newLink: DemoLink = {
-      id: slug,
-      title: values.title,
-      amount: values.amount,
-      description: values.description,
-      url: `/p/${slug}`,
-      status: "Non payé",
-    };
-
-    addLink(newLink);
-    
-    setGeneratedLink(`${window.location.origin}${newLink.url}`);
+    const newLink = createLink(values);
+    setGeneratedLink(`${window.location.origin}/p/${newLink.slug}`);
     form.reset();
+    refreshLinks();
   };
 
   const handleCopy = () => {
@@ -68,6 +72,15 @@ export default function DemoSection() {
     toast({
       title: "Copié !",
       description: "Lien de paiement copié dans le presse-papiers.",
+    });
+  };
+
+  const handleSimulatePayment = (linkId: string) => {
+    updateLinkStatus(linkId, "PAID");
+    refreshLinks();
+    toast({
+      title: "Paiement confirmé (simulé)",
+      description: `Le statut du lien est maintenant "Payé".`,
     });
   };
   
@@ -94,8 +107,8 @@ export default function DemoSection() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="amount">Montant (XOF)</Label>
-                    <Input id="amount" type="number" placeholder="e.g., 15000" {...form.register("amount")} />
-                    {form.formState.errors.amount && <p className="text-sm text-destructive">{form.formState.errors.amount.message}</p>}
+                    <Input id="amount" type="number" placeholder="e.g., 15000" {...form.register("amount_xof")} />
+                    {form.formState.errors.amount_xof && <p className="text-sm text-destructive">{form.formState.errors.amount_xof.message}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Description (Optionnel)</Label>
@@ -124,24 +137,27 @@ export default function DemoSection() {
 
             <Card className="lg:col-span-2 shadow-lg">
                 <CardHeader>
-                    <CardTitle>Liste de vos liens</CardTitle>
+                    <CardTitle>Vos liens récents</CardTitle>
                     <CardDescription>Suivez le statut de vos liens générés.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="border rounded-md">
                         <ul className="divide-y">
+                             {links.length === 0 && (
+                                <li className="p-4 text-center text-muted-foreground">Créez un lien pour le voir ici.</li>
+                            )}
                             {links.map(link => (
-                                <li key={link.id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <li key={link.link_id} className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                     <div className="flex-grow">
                                         <p className="font-semibold">{link.title}</p>
-                                        <p className="text-sm text-muted-foreground">{formatCurrency(link.amount)}</p>
+                                        <p className="text-sm text-muted-foreground">{formatCurrency(link.amount_xof)}</p>
                                     </div>
                                     <div className="flex items-center gap-4">
-                                        <Badge variant={link.status === 'Payé' ? 'default' : 'secondary'} className={link.status === 'Payé' ? 'bg-green-500/80' : ''}>
+                                        <Badge variant={link.status === 'PAID' ? 'default' : 'secondary'} className={link.status === 'PAID' ? 'bg-green-500/80 hover:bg-green-500/90' : ''}>
                                             {link.status}
                                         </Badge>
-                                        {link.status === 'Non payé' && (
-                                            <Button size="sm" variant="outline" onClick={() => simulatePayment(link.id)}>
+                                        {link.status === 'ACTIVE' && (
+                                            <Button size="sm" variant="outline" onClick={() => handleSimulatePayment(link.link_id)}>
                                                 Simuler paiement
                                             </Button>
                                         )}

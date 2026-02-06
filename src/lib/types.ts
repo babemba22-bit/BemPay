@@ -21,7 +21,7 @@ export type PaymentLink = {
 export type Payment = {
   payment_id: string;
   link_id: string;
-  provider: "CinetPay" | "PayDunya";
+  provider: "SIMULATED";
   provider_tx_id: string;
   payer_name: string;
   payer_email: string;
@@ -30,11 +30,7 @@ export type Payment = {
   raw_payload: object;
 };
 
-export type DemoLink = {
-  id: string;
-  title: string;
-  amount: number;
-  description?: string;
-  url: string;
-  status: "Non payé" | "Payé";
+export type Session = {
+  isAuthed: boolean;
+  authed_at: string | null;
 };

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { createLink } from "@/lib/local-data";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Copy, PlusCircle } from "lucide-react";
 import { useState } from "react";
@@ -21,30 +22,38 @@ import { z } from "zod";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  amount: z.coerce.number().positive("Amount must be a positive number"),
+  amount_xof: z.coerce.number().positive("Amount must be a positive number"),
   description: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function CreateLinkForm() {
+type CreateLinkFormProps = {
+  onLinkCreated: () => void;
+};
+
+export function CreateLinkForm({ onLinkCreated }: CreateLinkFormProps) {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const { toast } = useToast();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      amount: undefined,
+      amount_xof: undefined,
       description: "",
     },
   });
 
   const onSubmit = (values: FormValues) => {
-    // In a real app, you'd call an API here.
-    const slug = values.title.toLowerCase().replace(/\s+/g, '-').slice(0, 50);
-    const newLink = `${window.location.origin}/p/${slug}`;
-    setGeneratedLink(newLink);
+    const newLink = createLink(values);
+    const fullUrl = `${window.location.origin}/p/${newLink.slug}`;
+    setGeneratedLink(fullUrl);
     form.reset();
+    onLinkCreated(); // Notify parent to refresh
+    toast({
+        title: "Link created!",
+        description: "Your new payment link is ready.",
+    });
   };
 
   const handleCopy = () => {
@@ -73,8 +82,8 @@ export function CreateLinkForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Amount (XOF)</Label>
-            <Input id="amount" type="number" placeholder="e.g., 15000" {...form.register("amount")} />
-            {form.formState.errors.amount && <p className="text-sm text-destructive">{form.formState.errors.amount.message}</p>}
+            <Input id="amount" type="number" placeholder="e.g., 15000" {...form.register("amount_xof")} />
+            {form.formState.errors.amount_xof && <p className="text-sm text-destructive">{form.formState.errors.amount_xof.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description (Optional)</Label>

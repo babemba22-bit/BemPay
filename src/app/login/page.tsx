@@ -10,17 +10,18 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { login } from "@/lib/local-data";
+import { CircleDollarSign } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CircleDollarSign } from "lucide-react";
+import { useEffect } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // NOTE: In a real app, you would handle authentication here.
-    // For this demo, we'll just redirect to the dashboard.
+    login();
     router.push("/dashboard");
   };
 
@@ -47,14 +48,15 @@ export default function LoginPage() {
                   type="email"
                   placeholder="nom@exemple.com"
                   required
+                  defaultValue="demo@bempay.com"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Mot de passe</Label>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" required defaultValue="password" />
               </div>
               <Button type="submit" className="w-full !mt-6">
-                Se connecter
+                Se connecter (Démo)
               </Button>
             </CardContent>
           </form>
