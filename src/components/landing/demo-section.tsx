@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +19,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, PlusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useDemoLinks } from "@/hooks/use-demo-links";
+import type { DemoLink } from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(3, "Le titre doit faire au moins 3 caractères"),
@@ -28,34 +31,10 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-type Link = {
-  id: string;
-  title: string;
-  amount: number;
-  description?: string;
-  url: string;
-  status: "Non payé" | "Payé";
-};
-
 export default function DemoSection() {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
-  const [links, setLinks] = useState<Link[]>([]);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const storedLinks = localStorage.getItem("bemPayLinks");
-    if (storedLinks) {
-      setLinks(JSON.parse(storedLinks));
-    } else {
-        // Add some default mock data if localStorage is empty
-        const mockLinks: Link[] = [
-            { id: 'ABC123', title: "T-shirt 'Mali Dev'", amount: 15000, url: '/p/ABC123', status: 'Non payé'},
-            { id: 'DEF456', title: "Consulting (1hr)", amount: 75000, url: '/p/DEF456', status: 'Payé'},
-        ];
-        setLinks(mockLinks);
-        localStorage.setItem("bemPayLinks", JSON.stringify(mockLinks));
-    }
-  }, []);
+  const { links, addLink, simulatePayment } = useDemoLinks();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,7 +47,7 @@ export default function DemoSection() {
 
   const onSubmit = (values: FormValues) => {
     const slug = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const newLink: Link = {
+    const newLink: DemoLink = {
       id: slug,
       title: values.title,
       amount: values.amount,
@@ -77,9 +56,7 @@ export default function DemoSection() {
       status: "Non payé",
     };
 
-    const updatedLinks = [newLink, ...links];
-    setLinks(updatedLinks);
-    localStorage.setItem("bemPayLinks", JSON.stringify(updatedLinks));
+    addLink(newLink);
     
     setGeneratedLink(`${window.location.origin}${newLink.url}`);
     form.reset();
@@ -93,28 +70,7 @@ export default function DemoSection() {
       description: "Lien de paiement copié dans le presse-papiers.",
     });
   };
-
-  const simulatePayment = (id: string) => {
-    const updatedLinks = links.map(link => 
-      link.id === id ? { ...link, status: 'Payé' as const } : link
-    );
-    setLinks(updatedLinks);
-    localStorage.setItem("bemPayLinks", JSON.stringify(updatedLinks));
-    toast({
-      title: "Paiement confirmé (simulé)",
-      description: `Le statut du lien ${id} est maintenant "Payé".`,
-    });
-  };
   
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-ML', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
-
   return (
     <section id="demo" className="py-20 sm:py-32 bg-secondary/50">
       <div className="container mx-auto">

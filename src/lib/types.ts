@@ -29,3 +29,12 @@ export type Payment = {
   paid_at: string | null;
   raw_payload: object;
 };
+
+export type DemoLink = {
+  id: string;
+  title: string;
+  amount: number;
+  description?: string;
+  url: string;
+  status: "Non payé" | "Payé";
+};
