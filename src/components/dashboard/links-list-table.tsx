@@ -34,7 +34,10 @@ import Link from "next/link";
 
 type LinksListTableProps = {
   links: PaymentLink[];
+  totalLinkCount: number;
   onLinkUpdated: () => void;
+  filter: PaymentLink['status'] | 'ALL';
+  onFilterChange: (filter: PaymentLink['status'] | 'ALL') => void;
 };
 
 const statusTranslations: Record<PaymentLink['status'], string> = {
@@ -43,7 +46,16 @@ const statusTranslations: Record<PaymentLink['status'], string> = {
   DISABLED: 'DÉSACTIVÉ',
 };
 
-export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
+const filters: (PaymentLink['status'] | 'ALL')[] = ['ALL', 'ACTIVE', 'PAID', 'DISABLED'];
+const filterTranslations: Record<PaymentLink['status'] | 'ALL', string> = {
+  ALL: 'Tous',
+  ACTIVE: 'Actifs',
+  PAID: 'Payés',
+  DISABLED: 'Désactivés',
+};
+
+
+export function LinksListTable({ links, totalLinkCount, onLinkUpdated, filter, onFilterChange }: LinksListTableProps) {
   const { toast } = useToast();
 
   const handleCopy = (slug: string) => {
@@ -67,10 +79,27 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Vos liens de paiement</CardTitle>
-        <CardDescription>
-          Voici la liste de tous vos liens de paiement.
-        </CardDescription>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+                <CardTitle>Vos liens de paiement</CardTitle>
+                <CardDescription className="mt-1">
+                  Gérez et suivez l'état de tous vos liens.
+                </CardDescription>
+            </div>
+            <div className="flex items-center gap-1 border rounded-md p-1 bg-secondary/50 self-start">
+                {filters.map(f => (
+                    <Button
+                        key={f}
+                        variant={filter === f ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => onFilterChange(f)}
+                        className={`h-8 px-3 ${filter === f ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:bg-background'}`}
+                    >
+                        {filterTranslations[f]}
+                    </Button>
+                ))}
+            </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -86,12 +115,17 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {links.length === 0 && (
+            {links.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center h-24">Aucun lien créé pour le moment.</TableCell>
+                <TableCell colSpan={5} className="text-center h-24">
+                  {totalLinkCount === 0
+                    ? "Aucun lien créé pour le moment."
+                    : "Aucun lien ne correspond à ce filtre."
+                  }
+                </TableCell>
               </TableRow>
-            )}
-            {links.map((link) => (
+            ) : (
+              links.map((link) => (
               <TableRow key={link.link_id}>
                 <TableCell>
                   <div className="font-medium">{link.title}</div>
@@ -147,7 +181,8 @@ export function LinksListTable({ links, onLinkUpdated }: LinksListTableProps) {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       </CardContent>
