@@ -14,6 +14,8 @@ export default function LandingHeader() {
     { href: "#faq", label: "FAQ" },
   ];
 
+  const closeMenu = () => setIsMenuOpen(false);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
@@ -34,7 +36,10 @@ export default function LandingHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-2">
+          <Button variant="ghost" asChild>
+            <Link href="/login">Connexion</Link>
+          </Button>
           <Button asChild>
             <Link href="#liste-attente">Rejoindre la liste d’attente</Link>
           </Button>
@@ -52,21 +57,26 @@ export default function LandingHeader() {
         </div>
       </div>
       {isMenuOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full bg-background border-b pb-4">
-          <nav className="flex flex-col items-center gap-4 text-base mt-4">
+        <div className="md:hidden absolute top-16 left-0 w-full bg-background border-b pb-6">
+          <nav className="flex flex-col items-center gap-6 text-base mt-6 px-4">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
               >
                 {link.label}
               </Link>
             ))}
-             <Button asChild className="mt-4">
-                <Link href="#liste-attente" onClick={() => setIsMenuOpen(false)}>Rejoindre la liste d’attente</Link>
-            </Button>
+             <div className="flex flex-col gap-3 w-full pt-6 mt-2 border-t">
+                <Button variant="outline" asChild>
+                    <Link href="/login" onClick={closeMenu}>Connexion</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="#liste-attente" onClick={closeMenu}>Rejoindre la liste d’attente</Link>
+                </Button>
+            </div>
           </nav>
         </div>
       )}
