@@ -159,13 +159,14 @@ export function listPayments(): Payment[] {
   return getItem<Payment[]>(PAYMENTS_KEY, []);
 }
 
-export function createPayment(data: Omit<Payment, "payment_id" | "provider" | "provider_tx_id" | "status" | "paid_at" | "raw_payload">): Payment {
+export function createPayment(data: Omit<Payment, "payment_id" | "provider" | "provider_tx_id" | "status" | "paid_at" | "raw_payload" | "created_at">): Payment {
   const newPayment: Payment = {
     ...data,
     payment_id: `payment_${Math.random().toString(36).substr(2, 9)}`,
     provider: "SIMULATED",
     provider_tx_id: `sim_${Math.random().toString(36).substr(2, 9)}`,
     status: "INITIATED",
+    created_at: new Date().toISOString(),
     paid_at: null,
     raw_payload: {},
   };

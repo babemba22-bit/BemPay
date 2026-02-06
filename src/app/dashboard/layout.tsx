@@ -1,5 +1,6 @@
 import Header from '@/components/header';
 import type { ReactNode } from 'react';
+import { DashboardNav } from '@/components/dashboard/dashboard-nav';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const currentYear = new Date().getFullYear();
@@ -8,6 +9,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen w-full flex-col">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <DashboardNav />
         {children}
       </main>
       <footer className="border-t bg-card mt-auto">

@@ -14,6 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -29,7 +30,7 @@ import { updateLinkStatus } from "@/lib/local-data";
 import type { PaymentLink } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { Copy, ExternalLink, MoreHorizontal, PowerOff } from "lucide-react";
+import { ArrowRightLeft, Copy, ExternalLink, MoreHorizontal, PowerOff } from "lucide-react";
 import Link from "next/link";
 
 type LinksListTableProps = {
@@ -170,6 +171,13 @@ export function LinksListTable({ links, totalLinkCount, onLinkUpdated, filter, o
                       <DropdownMenuItem onClick={() => handleCopy(link.slug)}>
                         <Copy className="mr-2 h-4 w-4" /> Copier le lien
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/payments?link_id=${link.link_id}`}>
+                          <ArrowRightLeft className="mr-2 h-4 w-4" /> Voir les transactions
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleDisable(link.link_id)}
                         disabled={link.status === "DISABLED"}

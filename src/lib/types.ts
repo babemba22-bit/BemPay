@@ -26,6 +26,7 @@ export type Payment = {
   payer_name: string;
   payer_email: string;
   status: "INITIATED" | "SUCCESS" | "FAILED";
+  created_at: string;
   paid_at: string | null;
   raw_payload: object;
 };
