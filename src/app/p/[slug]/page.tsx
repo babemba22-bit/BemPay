@@ -14,12 +14,13 @@ type CheckoutPageProps = {
 };
 
 export default function CheckoutPage({ params }: CheckoutPageProps) {
+  const { slug } = params;
   const [link, setLink] = useState<PaymentLink | null | undefined>(undefined);
 
   useEffect(() => {
-    const foundLink = getLinkBySlug(params.slug);
+    const foundLink = getLinkBySlug(slug);
     setLink(foundLink);
-  }, [params.slug]);
+  }, [slug]);
 
   if (link === undefined) {
     // Loading state
