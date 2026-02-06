@@ -11,14 +11,14 @@ export default function PaymentSuccessPage() {
           <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
             <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
           </div>
-          <CardTitle className="mt-4 text-2xl">Payment Successful!</CardTitle>
+          <CardTitle className="mt-4 text-2xl">Paiement Réussi !</CardTitle>
           <CardDescription className="mt-2">
-            Thank you for your payment. Your transaction has been completed successfully.
+            Merci pour votre paiement. Votre transaction a été complétée avec succès.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/dashboard">Back to Home</Link>
+            <Link href="/dashboard">Retour au tableau de bord</Link>
           </Button>
         </CardContent>
       </Card>
