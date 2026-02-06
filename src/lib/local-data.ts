@@ -1,6 +1,7 @@
+
 "use client";
 
-import type { Creator, Payment, PaymentLink, Session } from "./types";
+import type { Creator, Payment, PaymentLink, Session, PaymentProvider } from "./types";
 
 const CREATOR_KEY = "bempay_creator";
 const LINKS_KEY = "bempay_links";
@@ -159,16 +160,25 @@ export function listPayments(): Payment[] {
   return getItem<Payment[]>(PAYMENTS_KEY, []);
 }
 
-export function createPayment(data: Omit<Payment, "payment_id" | "provider" | "provider_tx_id" | "status" | "paid_at" | "raw_payload" | "created_at">): Payment {
+type CreatePaymentInput = {
+  link_id: string;
+  payer_name: string;
+  payer_email: string;
+  provider: PaymentProvider;
+  payer_phone?: string;
+  card_last4?: string;
+};
+
+export function createPayment(data: CreatePaymentInput): Payment {
   const newPayment: Payment = {
-    ...data,
     payment_id: `payment_${Math.random().toString(36).substr(2, 9)}`,
-    provider: "SIMULATED",
     provider_tx_id: `sim_${Math.random().toString(36).substr(2, 9)}`,
     status: "INITIATED",
     created_at: new Date().toISOString(),
     paid_at: null,
     raw_payload: {},
+    card_brand: data.provider === "VISA" ? "VISA" : undefined,
+    ...data,
   };
   const payments = listPayments();
   setItem(PAYMENTS_KEY, [...payments, newPayment]);

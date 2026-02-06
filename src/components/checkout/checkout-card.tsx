@@ -21,17 +21,32 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CreditCard, Smartphone, Ban, CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
-const checkoutSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email("Veuillez entrer une adresse e-mail valide."),
-  paymentMethod: z.enum(["cinetpay", "paydunya"]),
-});
 
-type CheckoutFormValues = z.infer<typeof checkoutSchema>;
+const formSchema = z.discriminatedUnion('paymentMethod', [
+  z.object({
+    paymentMethod: z.literal('mobile'),
+    name: z.string().optional(),
+    email: z.string().email({ message: "Veuillez entrer une adresse e-mail valide." }),
+    phone: z.string().min(8, "Numéro de téléphone invalide.").refine(val => /^(?:\+223\s?)?[5-9](?:[0-9]\s?){7}$/.test(val.trim()), {
+      message: 'Numéro de téléphone malien valide requis (ex: 70123456).',
+    }),
+  }),
+  z.object({
+    paymentMethod: z.literal('card'),
+    email: z.string().email({ message: "Veuillez entrer une adresse e-mail valide." }),
+    cardName: z.string().min(2, 'Le nom sur la carte est requis.'),
+    cardNumber: z.string().length(16, 'Le numéro de carte doit comporter 16 chiffres.').regex(/^\d+$/, "Le numéro de carte ne doit contenir que des chiffres."),
+    expiry: z.string().regex(/^(0[1-9]|1[0-2])\s*\/\s*(\d{2})$/, 'La date doit être au format MM/AA.'),
+    cvv: z.string().length(3, 'Le CVV doit comporter 3 chiffres.').regex(/^\d+$/, "Le CVV ne doit contenir que des chiffres."),
+  }),
+]);
+
+type CheckoutFormValues = z.infer<typeof formSchema>;
 
 type CheckoutCardProps = {
   link: PaymentLink;
@@ -40,23 +55,40 @@ type CheckoutCardProps = {
 export function CheckoutCard({ link }: CheckoutCardProps) {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  
   const form = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      paymentMethod: "mobile",
       email: "",
-      paymentMethod: "cinetpay",
+      name: "",
+      phone: "",
     },
   });
+
+  const paymentMethod = form.watch("paymentMethod");
 
   const onSubmit = async (values: CheckoutFormValues, forceFailure = false) => {
     setIsProcessing(true);
     
-    const payment = createPayment({
-      link_id: link.link_id,
-      payer_name: values.name || "",
-      payer_email: values.email,
-    });
+    let payment;
+    if (values.paymentMethod === 'mobile') {
+      payment = createPayment({
+        link_id: link.link_id,
+        payer_name: values.name || "",
+        payer_email: values.email,
+        provider: 'ORANGE_MONEY',
+        payer_phone: values.phone,
+      });
+    } else {
+      payment = createPayment({
+        link_id: link.link_id,
+        payer_name: values.cardName,
+        payer_email: values.email,
+        provider: 'VISA',
+        card_last4: values.cardNumber.slice(-4),
+      });
+    }
     
     // Simulate network delay of 1.5s
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -115,7 +147,7 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
     <Card className="w-full shadow-xl">
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">{link.title}</CardTitle>
-        <CardDescription>{link.description}</CardDescription>
+        {link.description && <CardDescription>{link.description}</CardDescription>}
         <div className="text-4xl font-bold text-primary pt-4">
           {formatCurrency(link.amount_xof)}
         </div>
@@ -123,38 +155,90 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
       <Separator />
       <form onSubmit={form.handleSubmit(values => onSubmit(values, false))}>
         <CardContent className="pt-6 space-y-6">
+          
+          <Controller
+            control={form.control}
+            name="paymentMethod"
+            render={({ field }) => (
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="grid grid-cols-2 gap-4"
+              >
+                <Label
+                  htmlFor="mobile"
+                  className={cn(
+                    "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                    field.value === 'mobile' && "border-primary"
+                  )}
+                >
+                  <RadioGroupItem value="mobile" id="mobile" className="sr-only" />
+                  <Smartphone className="mb-3 h-6 w-6" />
+                  Mobile Money
+                </Label>
+                <Label
+                  htmlFor="card"
+                  className={cn(
+                    "flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                    field.value === 'card' && "border-primary"
+                  )}
+                >
+                  <RadioGroupItem value="card" id="card" className="sr-only" />
+                  <CreditCard className="mb-3 h-6 w-6" />
+                  Carte Visa
+                </Label>
+              </RadioGroup>
+            )}
+          />
+
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom complet (Optionnel)</Label>
-              <Input id="name" placeholder="ex: John Doe" {...form.register("name")} />
-              {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Adresse e-mail</Label>
-              <Input id="email" type="email" placeholder="john@exemple.com" {...form.register("email")} required />
-              {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Adresse e-mail</Label>
+                <Input id="email" type="email" placeholder="john@exemple.com" {...form.register("email")} required />
+                {form.formState.errors.email && <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>}
+              </div>
+
+             {paymentMethod === 'mobile' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Numéro Orange Money</Label>
+                    <Input id="phone" placeholder="+223 XX XX XX XX" {...form.register("phone")} />
+                    {form.formState.errors.phone && <p className="text-sm text-destructive">{form.formState.errors.phone.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nom complet (Optionnel)</Label>
+                    <Input id="name" placeholder="ex: John Doe" {...form.register("name")} />
+                  </div>
+                </>
+              )}
+
+              {paymentMethod === 'card' && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="cardName">Nom sur la carte</Label>
+                    <Input id="cardName" placeholder="John Doe" {...form.register("cardName")} />
+                    {form.formState.errors.cardName && <p className="text-sm text-destructive">{form.formState.errors.cardName.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cardNumber">Numéro de carte</Label>
+                    <Input id="cardNumber" placeholder="•••• •••• •••• ••••" {...form.register("cardNumber")} />
+                    {form.formState.errors.cardNumber && <p className="text-sm text-destructive">{form.formState.errors.cardNumber.message}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="expiry">Expiration (MM/AA)</Label>
+                      <Input id="expiry" placeholder="MM/AA" {...form.register("expiry")} />
+                      {form.formState.errors.expiry && <p className="text-sm text-destructive">{form.formState.errors.expiry.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cvv">CVV</Label>
+                      <Input id="cvv" placeholder="•••" {...form.register("cvv")} />
+                      {form.formState.errors.cvv && <p className="text-sm text-destructive">{form.formState.errors.cvv.message}</p>}
+                    </div>
+                  </div>
+                </>
+              )}
           </div>
-          <Separator />
-          <RadioGroup defaultValue="cinetpay" onValueChange={(value) => form.setValue('paymentMethod', value as "cinetpay" | "paydunya")}>
-            <Label>Moyen de paiement</Label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2 rounded-md border p-3 hover:border-primary has-[[data-state=checked]]:border-primary">
-                <RadioGroupItem value="cinetpay" id="cinetpay" />
-                <Label htmlFor="cinetpay" className="flex items-center gap-3 cursor-pointer text-base">
-                  <Smartphone className="h-5 w-5" />
-                  CinetPay (Mobile Money)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 rounded-md border p-3 hover:border-primary has-[[data-state=checked]]:border-primary">
-                <RadioGroupItem value="paydunya" id="paydunya" />
-                <Label htmlFor="paydunya" className="flex items-center gap-3 cursor-pointer text-base">
-                  <CreditCard className="h-5 w-5" />
-                  PayDunya (Carte, Mobile Money)
-                </Label>
-              </div>
-            </div>
-          </RadioGroup>
         </CardContent>
         <CardFooter className="flex-col items-stretch">
             <Button type="submit" className="w-full" disabled={isProcessing}>
@@ -167,6 +251,12 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
                     `Payer ${formatCurrency(link.amount_xof)}`
                 )}
             </Button>
+            <p className="text-xs text-center text-muted-foreground mt-2">
+                {paymentMethod === 'mobile' 
+                    ? "Tu recevras une confirmation après validation (mode démo)." 
+                    : "Démo: aucune donnée carte n’est enregistrée."
+                }
+            </p>
              <div className="text-center mt-2">
                 <button
                     type="button"

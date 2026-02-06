@@ -1,3 +1,4 @@
+
 export type Creator = {
   creator_id: string;
   display_name: string;
@@ -18,13 +19,18 @@ export type PaymentLink = {
   disabled_at: string | null;
 };
 
+export type PaymentProvider = "ORANGE_MONEY" | "VISA" | "SIMULATED";
+
 export type Payment = {
   payment_id: string;
   link_id: string;
-  provider: "SIMULATED";
+  provider: PaymentProvider;
   provider_tx_id: string;
   payer_name: string;
   payer_email: string;
+  payer_phone?: string;
+  card_last4?: string;
+  card_brand?: "VISA";
   status: "INITIATED" | "SUCCESS" | "FAILED";
   created_at: string;
   paid_at: string | null;
