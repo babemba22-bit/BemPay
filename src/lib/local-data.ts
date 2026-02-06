@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { Creator, Payment, PaymentLink, Session } from "./types";
@@ -194,6 +193,20 @@ export function markPaymentSuccess(payment_id: string, link_id: string): { payme
   const updatedLink = updateLinkStatus(link_id, "PAID");
 
   return { payment: updatedPayment, link: updatedLink };
+}
+
+export function markPaymentFailure(payment_id: string): Payment | undefined {
+    const payments = listPayments();
+    let failedPayment: Payment | undefined;
+    const updatedPayments = payments.map((p) => {
+        if (p.payment_id === payment_id) {
+          failedPayment = { ...p, status: "FAILED" };
+          return failedPayment;
+        }
+        return p;
+    });
+    setItem(PAYMENTS_KEY, updatedPayments);
+    return failedPayment;
 }
 
 // Session

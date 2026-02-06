@@ -14,12 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { createPayment, markPaymentSuccess } from "@/lib/local-data";
+import { createPayment, markPaymentFailure, markPaymentSuccess } from "@/lib/local-data";
 import type { PaymentLink } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Smartphone, Ban, CheckCircle } from "lucide-react";
+import { CreditCard, Smartphone, Ban, CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
@@ -38,6 +39,7 @@ type CheckoutCardProps = {
 
 export function CheckoutCard({ link }: CheckoutCardProps) {
   const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -47,24 +49,25 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
     },
   });
 
-  const onSubmit = (values: CheckoutFormValues) => {
-    console.log("Form values:", values);
+  const onSubmit = async (values: CheckoutFormValues, forceFailure = false) => {
+    setIsProcessing(true);
     
     const payment = createPayment({
       link_id: link.link_id,
       payer_name: values.name || "",
       payer_email: values.email,
     });
-    console.log("Initiating payment:", payment);
+    
+    // Simulate network delay of 1.5s
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const isSuccess = Math.random() > 0.2; // 80% success rate
+    const isSuccess = !forceFailure && Math.random() > 0.15; // 85% success rate
 
     if (isSuccess) {
       markPaymentSuccess(payment.payment_id, link.link_id);
-      console.log("Payment successful, redirecting...");
       router.push(`/payment/success?paymentId=${payment.payment_id}`);
     } else {
-      console.log("Payment failed, redirecting...");
+      markPaymentFailure(payment.payment_id);
       router.push(`/payment/failure?reason=simulation_failed`);
     }
   };
@@ -118,7 +121,7 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
         </div>
       </CardHeader>
       <Separator />
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(values => onSubmit(values, false))}>
         <CardContent className="pt-6 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -153,10 +156,27 @@ export function CheckoutCard({ link }: CheckoutCardProps) {
             </div>
           </RadioGroup>
         </CardContent>
-        <CardFooter>
-          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-            Payer {formatCurrency(link.amount_xof)}
-          </Button>
+        <CardFooter className="flex-col items-stretch">
+            <Button type="submit" className="w-full" disabled={isProcessing}>
+                {isProcessing ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Traitement...
+                    </>
+                ) : (
+                    `Payer ${formatCurrency(link.amount_xof)}`
+                )}
+            </Button>
+             <div className="text-center mt-2">
+                <button
+                    type="button"
+                    onClick={() => form.handleSubmit(values => onSubmit(values, true))()}
+                    className="text-xs text-muted-foreground hover:text-foreground underline disabled:no-underline disabled:opacity-50"
+                    disabled={isProcessing}
+                >
+                    Simuler un échec de paiement
+                </button>
+            </div>
         </CardFooter>
       </form>
     </Card>
