@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { createApp } from "@genkit-ai/next";
+import createApp from "@genkit-ai/next";
 import type { NextRequest } from "next/server";
 import "@/ai/dev";
 import "@/ai/genkit";
