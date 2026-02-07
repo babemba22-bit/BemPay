@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,10 @@ import { formatCurrency } from '@/lib/utils';
 import { CheckCircle2, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function PaymentSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get('paymentId');
   
@@ -117,4 +118,17 @@ export default function PaymentSuccessPage() {
       </Card>
     </div>
   );
+}
+
+
+export default function PaymentSuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-background px-4">
+                <Skeleton className="h-[450px] w-full max-w-md" />
+            </div>
+        }>
+            <SuccessContent />
+        </Suspense>
+    )
 }

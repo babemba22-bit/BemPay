@@ -1,10 +1,13 @@
+
 "use client";
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { XCircle, Home, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 const reasonMessages: Record<string, string> = {
   simulation_failed: "Le paiement a été marqué comme échoué pour cette simulation.",
@@ -13,7 +16,7 @@ const reasonMessages: Record<string, string> = {
   default: "Une erreur inattendue est survenue. Veuillez réessayer plus tard.",
 };
 
-export default function PaymentFailurePage() {
+function FailureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const reason = searchParams.get('reason') || 'default';
@@ -51,4 +54,16 @@ export default function PaymentFailurePage() {
       </Card>
     </div>
   );
+}
+
+export default function PaymentFailurePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-secondary/30 px-4">
+                <Skeleton className="h-[400px] w-full max-w-md" />
+            </div>
+        }>
+            <FailureContent />
+        </Suspense>
+    )
 }

@@ -1,12 +1,14 @@
+
 "use client";
 
 import { PaymentsListTable } from "@/components/dashboard/payments-list-table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { listLinks, listPayments } from "@/lib/local-data";
 import type { Payment, PaymentLink } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 
-export default function PaymentsPage() {
+function PaymentsPageContent() {
   const searchParams = useSearchParams();
   const linkIdFilter = searchParams.get('link_id');
 
@@ -55,4 +57,12 @@ export default function PaymentsPage() {
       />
     </div>
   );
+}
+
+export default function PaymentsPage() {
+    return (
+        <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+            <PaymentsPageContent />
+        </Suspense>
+    );
 }
